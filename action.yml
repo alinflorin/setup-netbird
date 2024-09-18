@@ -1,5 +1,7 @@
 name: 'Setup Netbird'
 description: 'Connect to your private Netbird VPN'
+icon: chevron-up
+color: orange
 inputs:
   setup-key:
     description: 'Netbird setup key'
