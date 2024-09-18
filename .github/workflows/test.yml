@@ -1,0 +1,20 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  test_job:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: setupNetbird
+        uses: ./
+        with:
+          setup-key: ${{ secrets.NETBIRD_SETUP_KEY }}
+          management-url: ${{ secrets.NETBIRD_MANAGEMENT_URL }}
+          admin-url: ${{ secrets.ADMIN_URL }}
+
+
+      - run: netbird status
+        shell: bash

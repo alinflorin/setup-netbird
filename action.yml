@@ -1,0 +1,61 @@
+name: 'Setup Netbird'
+description: 'Connect to your private Netbird VPN'
+inputs:
+  setup-key:
+    description: 'Netbird setup key'
+    required: true
+    default: ''
+  hostname:
+    description: 'Netbird hostname for agent'
+    required: false
+    default: ''
+  management-url:
+    description: 'Netbird management URL'
+    required: false
+    default: https://api.netbird.io:443
+  admin-url:
+    description: 'Netbird admin URL'
+    required: false
+    default: https://api.netbird.io:443
+  args:
+    description: 'Optional additional arguments to `netbird up`'
+    required: false
+    default: ''
+outputs:
+  random-number:
+    description: "Random number"
+    value: ${{ steps.random-number-generator.outputs.random-number }}
+runs:
+  using: "composite"
+  steps:
+  - name: Check Runner OS
+    if: ${{ runner.os != 'Linux' }}
+    shell: bash
+    run: |
+      echo "::error title=error hint::Action supports only Linux"
+      exit 1
+  - name: Download Netbird
+    shell: bash
+    env:
+      USE_BIN_INSTALL: true
+    run: curl -fsSL https://pkgs.netbird.io/install.sh | sh
+  - name: Connect to Netbird
+    shell: bash
+    env:
+      SETUP_KEY: ${{ inputs.setup-key }}
+      ADDITIONAL_ARGS: ${{ inputs.args }}
+      HOSTNAME: ${{ inputs.hostname }}
+      MANAGEMENT_URL: ${{ inputs.management-url }}
+      ADMIN_URL: ${{ inputs.admin-url }}
+    run: |
+      if [ -z "${HOSTNAME}" ]; then
+        HOSTNAME="github-$(cat /etc/hostname)"
+      fi
+      sudo netbird up --setup-key=${SETUP_KEY} --hostname=${HOSTNAME} --admin-url=${ADMIN_URL} --management-url=${MANAGEMENT_URL} ${ADDITIONAL_ARGS}
+  - name: Wait for Netbird to connect
+    shell: bash
+    run: |
+      while [ -z "$(sudo netbird status | grep 'Management: Connected')" ]; do
+      echo "Waiting for Netbird to connect..."
+      sleep 5
+      done
